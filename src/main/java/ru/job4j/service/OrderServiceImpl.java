@@ -3,7 +3,6 @@ package ru.job4j.service;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import ru.job4j.domain.Order;
 import ru.job4j.domain.OrderStatus;
@@ -52,12 +51,14 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    @KafkaListener(topics = "job4j_orders")
+    @KafkaListener(topics = "job4j_orders", groupId = "notification")
     public void receiveOrder(OrderDTO orderDTO) {
         log.debug(">>>>>>>>>>>>>>>>> " + orderDTO);
 
-        save(fromOrderDtoToOrder(orderDTO));
-        orderStatusService.save(new OrderStatus(orderDTO.getId(), orderDTO.getStatus()));
+        Optional<Order> saved = save(fromOrderDtoToOrder(orderDTO));
+        if (saved.isPresent()) {
+            orderStatusService.save(new OrderStatus(orderDTO.getId(), orderDTO.getStatus()));
+        }
     }
 
     private Order fromOrderDtoToOrder(OrderDTO orderDTO) {

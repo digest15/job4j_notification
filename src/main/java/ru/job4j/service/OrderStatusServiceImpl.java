@@ -2,6 +2,7 @@ package ru.job4j.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import ru.job4j.domain.Order;
 import ru.job4j.domain.OrderStatus;
@@ -59,5 +60,14 @@ public class OrderStatusServiceImpl implements OrderStatusService {
         Optional<OrderStatus> orderStatus = orderStatusRepository.findById(id);
         orderStatus.ifPresent(orderStatusRepository::delete);
         return orderStatus.isPresent();
+    }
+
+    @Override
+    @KafkaListener(topics = "job4j_notification_status")
+    public void receiveStatus(OrderStatus orderStatus) {
+        log.debug(">>>>>>>>>>>>>>>>>> " + orderStatus);
+
+        orderStatus.setId(0);
+        Optional<OrderStatus> saved = save(orderStatus);
     }
 }

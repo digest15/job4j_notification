@@ -19,4 +19,6 @@ public interface OrderStatusService {
 
     boolean delete(int id);
 
+    void receiveStatus(OrderStatus orderStatus);
+
 }
