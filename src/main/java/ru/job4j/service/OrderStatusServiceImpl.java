@@ -40,19 +40,14 @@ public class OrderStatusServiceImpl implements OrderStatusService {
 
     @Override
     public Optional<OrderStatus> save(OrderStatus orderStatus) {
+        Optional<OrderStatus> res = Optional.empty();
         try {
-            orderStatus = orderStatusRepository.save(new OrderStatus(
-                            orderStatus.getOrderId(),
-                            orderStatus.getStatus()
-                    )
-            );
+            orderStatusRepository.save(new OrderStatus(orderStatus.getOrderId(), orderStatus.getStatus()));
+            res = Optional.of(orderStatus);
         } catch (Exception e) {
             log.error("Save or Update was wrong", e);
         }
-
-        return orderStatus.getId() == 0
-                ? Optional.of(orderStatus)
-                : Optional.empty();
+        return res;
     }
 
     @Override
@@ -65,7 +60,9 @@ public class OrderStatusServiceImpl implements OrderStatusService {
     @Override
     @KafkaListener(topics = "job4j_notification_status")
     public void receiveStatus(OrderStatus orderStatus) {
-        log.debug(">>>>>>>>>>>>>>>>>> " + orderStatus);
+        if (log.isDebugEnabled()) {
+            log.debug(orderStatus.toString());
+        }
 
         orderStatus.setId(0);
         Optional<OrderStatus> saved = save(orderStatus);

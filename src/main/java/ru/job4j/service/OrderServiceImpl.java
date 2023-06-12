@@ -40,20 +40,22 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Optional<Order> save(Order order) {
+        Optional<Order> res = Optional.empty();
         try {
             orderRepository.save(order);
+            res = Optional.of(order);
         } catch (Exception e) {
             log.error("Save or Update was wrong", e);
         }
-        return order.getId() != 0
-                ? Optional.of(order)
-                : Optional.empty();
+        return res;
     }
 
     @Override
     @KafkaListener(topics = "job4j_orders", groupId = "notification")
     public void receiveOrder(OrderDTO orderDTO) {
-        log.debug(">>>>>>>>>>>>>>>>> " + orderDTO);
+        if (log.isDebugEnabled()) {
+            log.debug(orderDTO.toString());
+        }
 
         Optional<Order> saved = save(fromOrderDtoToOrder(orderDTO));
         if (saved.isPresent()) {
